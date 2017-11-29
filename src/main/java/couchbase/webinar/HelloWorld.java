@@ -55,7 +55,7 @@ public class HelloWorld {
                         // if 1 second has elapsed, show the counts and reset them for the
                         // next second
                         if(Duration.between(start, now).getSeconds() >= 1) {
-                                System.out.println("Writes: " + writes + ", Reads: " + reads);
+                                System.out.println("Writes: " + writes + " ops, Reads: " + reads + " ops");
                                 start = Instant.now();
                                 writes = 0;
                                 reads = 0;
