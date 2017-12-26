@@ -1,6 +1,6 @@
-# Couchbase Webinar
+# Couchbase xDCR Sample Project
 
-This project is meant to demonstrate High Available (HA) and Multi-Datacenter (MD) Failover
+This project makes use of the 
 
 Installation
 * Java 6 or higher
@@ -9,5 +9,10 @@ Installation
 To run the example
 
     mvn compile
-    mvn exec:java -D exec.mainClass="couchbase.webinar.HelloWorld"  
+    mvn exec:java
+or
+
+    mvn compile
+    mvn exec:exec@daemon
+      
        

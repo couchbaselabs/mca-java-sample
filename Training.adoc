@@ -1,0 +1,89 @@
+sudo yum install -y pkgconfig
+
+Loaded plugins: fastestmirror
+Determining fastest mirrors
+ * base: repos.forethought.net
+ * extras: mirror.tzulo.com
+ * updates: mirror.sfo12.us.leaseweb.net
+base                                                     | 3.7 kB     00:00
+extras                                                   | 3.4 kB     00:00
+updates                                                  | 3.4 kB     00:00
+updates/primary_db                                       | 5.3 MB     00:00
+Setting up Install Process
+Package 1:pkgconfig-0.23-9.1.el6.x86_64 already installed and latest version
+Nothing to do
+
+rpm -q -a | grep "openssl"
+
+openssl-1.0.1e-15.el6.x86_64
+
+wget https://packages.couchbase.com/releases/5.0.0/couchbase-server-enterprise-5.0.0-centos6.x86_64.rpm
+
+THP??
+
+rpm --install couchbase-server-enterprise-5.0.0-centos6.x86_64.rpm
+
+Minimum RAM required  : 4 GB
+System RAM configured : 3.72 GB
+
+Minimum number of processors required : 4 cores
+Number of processors on the system    : 4 cores
+
+Starting couchbase-server
+[  OK  ]
+
+You have successfully installed Couchbase Server.
+Please browse to http://xcp-s71107:8091/ to configure your server.
+Please refer to http://couchbase.com for additional resources.
+
+Please note that you have to update your firewall configuration to
+allow connections to the following ports:
+4369, 8091 to 8094, 9100 to 9105, 9998, 9999, 11207, 11209 to 11211,
+11214, 11215, 18091 to 18093, and from 21100 to 21299.
+
+By using this software you agree to the End User License Agreement.
+See /opt/couchbase/LICENSE.txt.
+
+http://172.23.122.55:8091/
+
+CentOS 7
+
+ulimit -n 70000
+
+Warning: Transparent hugepages looks to be active and should not be.
+Please look at https://developer.couchbase.com/documentation/server/current/install/thp-disable.html as for how to PERMANENTLY alter this setting.
+Minimum RAM required  : 4 GB
+System RAM configured : 3.45 GB
+
+Minimum number of processors required : 4 cores
+Number of processors on the system    : 4 cores
+
+Failed to execute operation: Access denied
+Failed to start couchbase-server.service: Access denied
+
+You have successfully installed Couchbase Server.
+Please browse to http://localhost.localdomain:8091/ to configure your server.
+Please refer to http://couchbase.com for additional resources.
+
+Please note that you have to update your firewall configuration to
+allow connections to the following ports:
+4369, 8091 to 8094, 9100 to 9105, 9998, 9999, 11207, 11209 to 11211,
+11214, 11215, 18091 to 18093, and from 21100 to 21299.
+
+By using this software you agree to the End User License Agreement.
+See /opt/couchbase/LICENSE.txt.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=1224211
+
+systemctl daemon-reexec
+service couchbase-server start
+
+echo 'never' > /sys/kernel/mm/transparent_hugepage/enabled
+echo 'never' > /sys/kernel/mm/transparent_hugepage/defrag
+
+cat /proc/sys/vm/swappiness
+echo 0 > /proc/sys/vm/swappiness
+
+>> Show query with primary index
+>> Show index creation
+>> Show query optimization analysis (time permitting)

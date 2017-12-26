@@ -4,39 +4,81 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>couchbase-n1ql-examples</groupId>
-    <artifactId>couchbase-n1ql-examples</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <groupId>com.couchbase.server</groupId>
+    <artifactId>xdcr</artifactId>
+    <version>1.0</version>
+    <name>xDCR Java Sample</name>
+    <description>
+        This shows an example of using the Java SDK with Couchbase Server, including the cross-data center (xDCR)
+        automated failover support.
+    </description>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    </properties>
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
     <dependencies>
         <dependency>
             <groupId>com.couchbase.client</groupId>
             <artifactId>java-client</artifactId>
-            <version>2.5.2</version>
-            <scope>compile</scope>
+            <version>2.5.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.couchbase.client</groupId>
+            <artifactId>multi-cluster-java</artifactId>
+            <version>0.3.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.github.javafaker</groupId>
             <artifactId>javafaker</artifactId>
             <version>0.14</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/net.sf.jopt-simple/jopt-simple -->
+        <dependency>
+            <groupId>net.sf.jopt-simple</groupId>
+            <artifactId>jopt-simple</artifactId>
+            <version>5.0.4</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.7.0</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <version>1.5.0</version>
+                <version>1.6.0</version>
+                <configuration>
+                    <mainClass>com.couchbase.server.xdcr.ClusterBasics</mainClass>
+                </configuration>
                 <executions>
                     <execution>
-                        <phase>package</phase>
+                        <id>daemon</id>
                         <goals>
-                            <goal>java</goal>
+                            <goal>exec</goal>
                         </goals>
+                        <configuration>
+                            <executable>java</executable>
+                            <arguments>
+                                <argument>-classpath</argument>
+                                <classpath/>
+                                <argument>com.couchbase.server.xdcr.ClusterBasics</argument>
+                            </arguments>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <cleanupDaemonThreads>false</cleanupDaemonThreads>
-                </configuration>
             </plugin>
         </plugins>
     </build>
