@@ -1,10 +1,30 @@
 package com.couchbase.server.xdcr;
 
 import com.couchbase.utils.Options;
+import com.couchbase.utils.Logger;
+import static com.couchbase.utils.Logger.log;
 
-import com.couchbase.client.java.Bucket;
-import com.couchbase.client.java.Cluster;
-import com.couchbase.client.java.CouchbaseCluster;
+import com.couchbase.client.mc.ClusterSpec;
+import com.couchbase.client.mc.MultiClusterClient;
+import com.couchbase.client.mc.BucketFacade;
+import com.couchbase.client.mc.coordination.Coordinator;
+import com.couchbase.client.mc.coordination.Coordinators;
+import com.couchbase.client.mc.coordination.IsolatedCoordinator;
+import com.couchbase.client.mc.coordination.TopologyBehavior;
+import com.couchbase.client.mc.detection.FailureDetectorFactory;
+import com.couchbase.client.mc.detection.NodeHealthFailureDetector;
+import com.couchbase.client.mc.detection.DisjunctionFailureDetectorFactory;
+import com.couchbase.client.mc.detection.FailureDetectorFactories;
+import com.couchbase.client.mc.detection.TrafficMonitoringFailureDetector;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+import com.couchbase.client.core.service.ServiceType;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.query.N1qlQuery;
@@ -18,6 +38,7 @@ import static com.couchbase.client.java.query.dsl.Expression.*;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import com.github.javafaker.Faker;
 import com.github.javafaker.Name;
@@ -28,8 +49,12 @@ import com.github.javafaker.Name;
  */
 
 public class ClusterBasics {
-  private static Bucket bucket;
+  private static final int TIMEOUT = 1000;
+
   private static String bucketName;
+  private static BucketFacade bucket;
+
+  private static final Set<ServiceType> serviceTypes = new HashSet<>();
 
   private static final int MAX_ID = 1000000; 
 
@@ -44,12 +69,53 @@ public class ClusterBasics {
   public static void main(String... args) throws Exception {
     Options options = new Options(args);
 
+    Logger.init(options.stringValueOf("log"));
     verbose = options.has("verbose");
+    
     bucketName = options.stringValueOf("bucket");
 
-    Cluster cluster = CouchbaseCluster.create(options.stringValueOf("cluster").split(","));
-    cluster.authenticate(options.stringValueOf("user"), options.stringValueOf("password"));
-    bucket = cluster.openBucket(bucketName);
+    String[] clusters = options.stringValueOf("clusters").split(":");
+
+    List<ClusterSpec> specs = new ArrayList<>(clusters.length);
+
+    for (String cluster: clusters) {
+      Set<String> nodes = Arrays.stream(cluster.split(",")).collect(Collectors.toSet());
+      specs.add(ClusterSpec.create(nodes));
+    }
+
+    //specs = Arrays.stream(clusters)
+    //  .map(cluster -> Arrays.stream(cluster.split(",")).collect(Collectors.toSet()))
+    //  .map(ClusterSpec::create)
+    //  .collect(Collectors.toList());
+
+    serviceTypes.add(ServiceType.QUERY);
+    serviceTypes.add(ServiceType.BINARY);
+
+    Coordinator coordinator = Coordinators.isolated(new IsolatedCoordinator.Options()
+      .clusterSpecs(specs)
+      .activeEntries(specs.size())
+      .failoverNumNodes(2)
+      .gracePeriod(TIMEOUT)
+      .topologyBehavior(TopologyBehavior.WRAP_AT_END)
+      .serviceTypes(serviceTypes)
+    );
+  
+    TrafficMonitoringFailureDetector.Options trafficOptions = TrafficMonitoringFailureDetector.options()
+      .maxFailedOperations(5)
+      .failureInterval(60);
+
+    FailureDetectorFactory<TrafficMonitoringFailureDetector> traffic = FailureDetectorFactories.trafficMonitoring(coordinator, trafficOptions);
+
+    NodeHealthFailureDetector.Options healthOptions = NodeHealthFailureDetector.options();
+    
+    FailureDetectorFactory<NodeHealthFailureDetector> health = FailureDetectorFactories.nodeHealth(coordinator, healthOptions);
+
+    DisjunctionFailureDetectorFactory detector = FailureDetectorFactories.disjunction(traffic, health);
+
+    MultiClusterClient client = new MultiClusterClient(coordinator, detector);
+  
+    client.authenticate(options.stringValueOf("id"), options.stringValueOf("password"));
+    bucket = new BucketFacade(client.openBucket(bucketName, null), TIMEOUT, TimeUnit.MILLISECONDS);
 
     startThreads(options);
 
@@ -66,7 +132,7 @@ public class ClusterBasics {
           bucket.get("person::" + id);
           reads.getAndIncrement();
         } catch(Exception ex) {
-          if (verbose) System.err.println("Reader exception: " + ex.getMessage());
+          log("read", "Reader exception: ", ex.getMessage());
         }
       }
     }
@@ -85,11 +151,14 @@ public class ClusterBasics {
 
         String key = "person::" + UUID.randomUUID().toString();
 
-        if (verbose) System.out.println("Wrote key " + key);
+        try {
+          bucket.insert(JsonDocument.create(key, contents));
+          writes.getAndIncrement();
 
-        bucket.insert(JsonDocument.create(key, contents));
-
-        writes.getAndIncrement();
+          if (verbose) System.out.println("Wrote key " + key);
+        } catch(Exception ex) {
+          log("write", "Writer exception: ", ex.getMessage());
+        }
       }
     }
   }
@@ -112,7 +181,7 @@ public class ClusterBasics {
 
           updates.getAndIncrement();
         } catch(Exception ex) {
-          if (verbose) System.err.println("Updater exception: " + ex.getMessage());
+          log("update", "Updater exception: ", ex.getMessage());
         }
       }
     }
@@ -128,16 +197,20 @@ public class ClusterBasics {
           .from(bucketName)
           .where(x("lastName").eq(s(name.lastName())));
         N1qlQuery query = N1qlQuery.simple(statement);
-        N1qlQueryResult result = bucket.query(query);
-
-        queries.getAndIncrement();
-
-        if (!verbose) continue;
         
-        System.out.println("Queried for " + name.lastName());
+        try {
+          N1qlQueryResult result = bucket.query(query);
+          queries.getAndIncrement();
 
-        for (N1qlQueryRow row : result) {
-          System.out.println(row);
+          if (!verbose) continue;
+        
+          System.out.println("Queried for " + name.lastName());
+
+          for (N1qlQueryRow row : result) {
+            System.out.println(row);
+          }
+        } catch(Exception ex) {
+          log("query", "Query exception: ", ex.getMessage());
         }
       }
     }
@@ -171,7 +244,9 @@ public class ClusterBasics {
 
     while (true) {
       Thread.sleep(1000);
-      
+
+      if (!Logger.logging("statistics")) continue;
+
       read = reads.getAndSet(0);
       written = writes.getAndSet(0);
       updated = updates.getAndSet(0);

@@ -11,6 +11,7 @@ public class Options {
   private OptionParser optionParser;
   private OptionSet optionSet;
 
+  @SuppressWarnings("unused")
   private Options() { throw new AssertionError("This is not the constructor you are looking for."); }
 
   public Options(String... arguments) {
@@ -19,13 +20,13 @@ public class Options {
     optionParser.acceptsAll(asList("b", "bucket"))
         .withRequiredArg()
         .defaultsTo("default");
-    optionParser.acceptsAll(asList("c", "cluster"))
+    optionParser.acceptsAll(asList("c", "clusters"))
         .withRequiredArg()
         .defaultsTo("localhost");
 
-    optionParser.acceptsAll(asList("i", "user"))
+    optionParser.acceptsAll(asList("i", "id"))
         .withRequiredArg()
-        .defaultsTo("user");
+        .defaultsTo("id");
     optionParser.acceptsAll(asList("p", "password"))
         .withRequiredArg()
         .defaultsTo("password");
@@ -46,6 +47,9 @@ public class Options {
         .withRequiredArg()
         .ofType(Integer.class)
         .defaultsTo(0);
+
+    optionParser.acceptsAll(asList("l", "log"))
+        .withRequiredArg();
 
     optionParser.acceptsAll(asList("v", "verbose"));
 
