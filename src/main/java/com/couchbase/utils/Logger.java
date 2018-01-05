@@ -3,12 +3,12 @@ package com.couchbase.utils;
 import java.util.Arrays;
 import java.util.HashSet;
 
-public class Logger {
+public abstract class Logger {
   private static final HashSet<String> groups = new HashSet<>();
 
   public static void init(String spec) {
     if (null == spec) return;
-    
+
     Arrays.stream(spec.split(",")).forEach(group -> groups.add(group.toLowerCase()));
   }
 
