@@ -145,9 +145,9 @@ public class ClusterBasics {
         Name name = faker.name();
 
         JsonObject contents = JsonObject.create()
-            .put("firstName", name.firstName())
-            .put("lastName", name.lastName())
-            .put("type", "person");
+          .put("firstName", name.firstName())
+          .put("lastName", name.lastName())
+          .put("type", "person");
 
         String key = "person::" + UUID.randomUUID().toString();
 
@@ -170,8 +170,12 @@ public class ClusterBasics {
         int id = ThreadLocalRandom.current().nextInt(MAX_ID);
       
         try {
+          Name name = faker.name();
           JsonDocument document = bucket.get("person::" + id);
-          Name name = faker.name();          
+
+          if (null == document) {
+            document = JsonDocument.create("person::" + id, JsonObject.create().put("type", "person"));
+          }
           
           document.content()
             .put("firstName", name.firstName())
@@ -272,7 +276,7 @@ public class ClusterBasics {
       }
 
       System.out.format("%d reads %d writes %d updates %d queries%n",
-          read, written, updated, queried);
+        read, written, updated, queried);
     }
   }
 }

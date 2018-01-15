@@ -8,4 +8,5 @@
         <appender-ref ref="STDOUT" />
     </root>
     <logger level="off" name="com.couchbase.client.core.endpoint.Endpoint" />
+    <logger level="error" name="com.couchbase.client.core.env.CoreEnvironment" />
 </configuration>

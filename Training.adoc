@@ -1,65 +1,93 @@
-sudo yum install -y pkgconfig
+:imagesdir: images
 
+High Availability and Disaster Recovery
+
+[N.B. In the following sections we sill present sample output from commands.
+This is intended to give an idea of a typical response.  The actual output
+will likely differ.  Some output has been reduced for brevity.]
+
+Lab Exercise 1 - Deploy a Single Node
+
+In this exercise, we will deploy a single node of Couchbase Server.
+The instructions apply for Red Hat Enterprise Linux and CentOS Linux 7.  For more details,
+or instructions to get started with other platforms, go to https://developer.couchbase.com/documentation/server/current/getting-started/start-here.html
+
+. Open a command shell on your server.
+. Verify pkgconfig is installed, or install it.
+
+```bash
+sudo yum install -y pkgconfig
+```
+
+The command should output something like (hereafter noted as "Expected ouput"):
+
+```
 Loaded plugins: fastestmirror
-Determining fastest mirrors
- * base: repos.forethought.net
- * extras: mirror.tzulo.com
- * updates: mirror.sfo12.us.leaseweb.net
-base                                                     | 3.7 kB     00:00
-extras                                                   | 3.4 kB     00:00
-updates                                                  | 3.4 kB     00:00
-updates/primary_db                                       | 5.3 MB     00:00
-Setting up Install Process
+...
 Package 1:pkgconfig-0.23-9.1.el6.x86_64 already installed and latest version
 Nothing to do
+```
 
+[start=3]
+. Verify OpenSSL v1.0.1e-16 or later is installed.  (Some prior versions contain the "Heartbleed" vulnerability.)
+```bash
 rpm -q -a | grep "openssl"
+```
 
-openssl-1.0.1e-15.el6.x86_64
+Expected output:
+```
+openssl-1.0.1e-51.el7_2.2.x86_64
+```
 
-wget https://packages.couchbase.com/releases/5.0.0/couchbase-server-enterprise-5.0.0-centos6.x86_64.rpm
+[start=4]
+. Directly download the Couchbase Server release package.
+```bash
+wget https://packages.couchbase.com/releases/5.0.1/couchbase-server-enterprise-5.0.1-centos7.x86_64.rpm
+```
 
-THP??
+Expected output:
+```
+--2018-01-09 16:07:17--  https://packages.couchbase.com/releases/5.0.1/couchbase-server-enterprise-5.0.1-centos7.x86_64.rpm
+Resolving packages.couchbase.com (packages.couchbase.com)... 54.192.145.11, 54.192.145.191, 54.192.145.180, ...
+Connecting to packages.couchbase.com (packages.couchbase.com)|54.192.145.11|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 119728060 (114M) [application/x-rpm]
+Saving to: ‘couchbase-server-enterprise-5.0.1-centos7.x86_64.rpm’
 
-rpm --install couchbase-server-enterprise-5.0.0-centos6.x86_64.rpm
+100%[======================================>] 119,728,060 71.8MB/s   in 1.6s   
 
-Minimum RAM required  : 4 GB
-System RAM configured : 3.72 GB
+2018-01-09 16:07:19 (71.8 MB/s) - ‘couchbase-server-enterprise-5.0.1-centos7.x86_64.rpm’ saved [119728060/119728060]
+```
 
-Minimum number of processors required : 4 cores
-Number of processors on the system    : 4 cores
+[start=5]
+. Tune system parameters
+.. Turn off "Transparent Huge Pages"
+.. Tune swap behavior
+.. Increase open file limit
 
-Starting couchbase-server
-[  OK  ]
-
-You have successfully installed Couchbase Server.
-Please browse to http://xcp-s71107:8091/ to configure your server.
-Please refer to http://couchbase.com for additional resources.
-
-Please note that you have to update your firewall configuration to
-allow connections to the following ports:
-4369, 8091 to 8094, 9100 to 9105, 9998, 9999, 11207, 11209 to 11211,
-11214, 11215, 18091 to 18093, and from 21100 to 21299.
-
-By using this software you agree to the End User License Agreement.
-See /opt/couchbase/LICENSE.txt.
-
-http://172.23.122.55:8091/
-
-CentOS 7
-
+```bash
+echo 'never' > /sys/kernel/mm/transparent_hugepage/enabled
+echo 'never' > /sys/kernel/mm/transparent_hugepage/defrag
+echo 0 > /proc/sys/vm/swappiness
 ulimit -n 70000
+```
 
-Warning: Transparent hugepages looks to be active and should not be.
-Please look at https://developer.couchbase.com/documentation/server/current/install/thp-disable.html as for how to PERMANENTLY alter this setting.
+[start=6]
+. Use `rpm` to install the downloaded package.
+
+```bash
+sudo rpm --install couchbase-server-enterprise-5.0.1-centos7.x86_64.rpm
+```
+
+Expected output:
+
+```
 Minimum RAM required  : 4 GB
 System RAM configured : 3.45 GB
 
 Minimum number of processors required : 4 cores
 Number of processors on the system    : 4 cores
 
-Failed to execute operation: Access denied
-Failed to start couchbase-server.service: Access denied
 
 You have successfully installed Couchbase Server.
 Please browse to http://localhost.localdomain:8091/ to configure your server.
@@ -72,18 +100,115 @@ allow connections to the following ports:
 
 By using this software you agree to the End User License Agreement.
 See /opt/couchbase/LICENSE.txt.
+```
 
-https://bugzilla.redhat.com/show_bug.cgi?id=1224211
+[N.B. Note the list of ports above Couchbase Server needs to operate.
+Please be sure to check your firewall settings if you have any problems connecting.]
 
+[start=7]
+. Reload `systemctl` configuration
+
+```bash
 systemctl daemon-reexec
+```
+
+[start=8]
+. Start Couchbase Server
+
+```bash
 service couchbase-server start
+```
 
-echo 'never' > /sys/kernel/mm/transparent_hugepage/enabled
-echo 'never' > /sys/kernel/mm/transparent_hugepage/defrag
+Expected output:
 
-cat /proc/sys/vm/swappiness
-echo 0 > /proc/sys/vm/swappiness
+```
+Redirecting to /bin/systemctl start  couchbase-server.service
+```
 
+At this point Couchbase Server should be running.  If this is a new
+installation, the next step will be to configure server parameters and
+create a new bucket.  See Exercise 2 for these steps.
+
+If you have already configured one server and wish to add another to a cluster,
+skip to Exercise ...
+
+Lab Exercise 2 - Configure a Single Node
+
+In this exercise, we will configure a newly-installed node of Couchbase Server.
+
+. Open a browser and navigate to <ip address>:8091, where <ip address>
+is the IP address of the host machine.  You should see the first page of
+the new configuration screens, as shown here.
+
+image::NewInstallStart.png[New Installation Start Page]
+
+[start=2]
+. Click on "Setup New Cluster"
+. Enter a cluster name
+. Enter and confirm a password for the Administrator
+. Click "Next: Accept Terms"
+
+image::NewInstallPg2.png[Setup New Cluster]
+
+[start=6]
+. Read the Couchbase Server Terms and Conditions
+. Click the check box next to "I accept the terms & conditions"
+. Click "Configure Disk, Memory, Services" 
+
+image::NewInstallPg3.png[Terms and Conditions]
+
+[start=9]
+. Enter the IP address of the host of the new installation
+. Click "Save & Finish"
+
+The Couchbase Server Console automatically attempts to provide a reasonable
+set of default values for the other options.  You can, of course, experiment
+with other values.
+
+image::NewInstallPg4.png[IP address, memory, disk, and service options]
+
+The Couchbase Server Console will now show you the main dashboard screen, seen here.
+
+image::NewDashboard.png[]
+
+Lab Exercise 3 - Create a New Bucket and Add a New documentation
+
+In this exercise, we will create a new Couchbase Server Bucket, and
+add a new document using the Console.  Buckets are a high level organizational
+structure in Couchbase.  You will always need at least one.
+
+. On the left side of your console, click on the "Buckets" link
+. Click on "Add Bucket" in the upper right corner
+. In the modal dialog that appears, enter a name for the bucket
+.. You can choose most any name you like, with some restrictions
+. Click "Add Bucket" in the dialog
+
+The console will show you some information about the bucket, and mark it
+yellow while the bucket is brought on line.
+
+image::NewBucket.gif[Creating a new bucket]
+
+. To the right in the bucket information row, click on "Documents"
+. Click on "Add Document" in the upper right corner
+. In the modal dialog, enter a document id
+.. Document IDs can be almost anything
+.. You may want to remember the ID you enter for easy access later
+. Click "Save Document"
+
+The console will take you to a page where you can edit your newly created documenet.
+You can change the document by entering any valid JSON.
+
+[start=5]
+. After the first brace, add some new data in JSON format
+.. For example, you can type the following: "add": "new data",
+.. Note the editor dynamically indicates whether the JSON is valid
+. Once you're satisfied, click "Save"
+.. Notice the generation number of the revision id increases (shown to the right).
+
+image::NewDocEditor.gif[Creating a new document manually]
+
+You now have a document you can retrieve using direct key/value lookup.
+This walk-through focuses on installation
 >> Show query with primary index
 >> Show index creation
 >> Show query optimization analysis (time permitting)
