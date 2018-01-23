@@ -1,12 +1,31 @@
+:meta-description: Enable and control improved logging with SLF4J and Logback.
+:title: Controlling Hierarchical Logging with SLF4J and Logback
+:slug: controlling-hierarchical-logging-slf4j-logback
+:focus-keyword: 
+:categories: Couchbase Server
+:tags: Couchbase Server, Logback, SLF4J
+:heroimage: 
+:source-highlighter: pygments
 :imagesdir: images
 
-High Availability and Disaster Recovery
+= Couchbase Server High Availability and Disaster Recovery Lab
 
-[N.B. In the following sections we sill present sample output from commands.
+This document is intended to give a step-by-step series of exercises to get you
+up and running with Couchbase Server in a configuration that supports global 
+high availability and disaster recovery.  It includes supporting material in the
+form of an example application written in Java.
+
+[N.B. In the following sections we will present sample output from commands.
 This is intended to give an idea of a typical response.  The actual output
 will likely differ.  Some output has been reduced for brevity.]
 
-Lab Exercise 1 - Deploy a Single Node
+== Section 1 - Installing and Configuring a Single Node Cluster
+
+In this section we will walk through installing a new node of Couchbase Server
+from the Linux command line.  In the end, you will have a functioning node
+suitable for doing key/value based document operations.
+
+=== Lab Exercise 1.1 - Deploy a Single Node
 
 In this exercise, we will deploy a single node of Couchbase Server.
 The instructions apply for Red Hat Enterprise Linux and CentOS Linux 7.  For more details,
@@ -15,38 +34,44 @@ or instructions to get started with other platforms, go to https://developer.cou
 . Open a command shell on your server.
 . Verify pkgconfig is installed, or install it.
 
-```bash
+[source,bash,indent=0]
+----
 sudo yum install -y pkgconfig
-```
+----
 
 The command should output something like (hereafter noted as "Expected ouput"):
 
-```
+----
 Loaded plugins: fastestmirror
 ...
 Package 1:pkgconfig-0.23-9.1.el6.x86_64 already installed and latest version
 Nothing to do
-```
+----
 
 [start=3]
 . Verify OpenSSL v1.0.1e-16 or later is installed.  (Some prior versions contain the "Heartbleed" vulnerability.)
-```bash
+
+[source,bash,indent=0]
+----
 rpm -q -a | grep "openssl"
-```
+----
 
 Expected output:
-```
+----
 openssl-1.0.1e-51.el7_2.2.x86_64
-```
+----
 
 [start=4]
 . Directly download the Couchbase Server release package.
-```bash
+
+[source,bash,indent=0]
+----
 wget https://packages.couchbase.com/releases/5.0.1/couchbase-server-enterprise-5.0.1-centos7.x86_64.rpm
-```
+----
 
 Expected output:
-```
+
+----
 --2018-01-09 16:07:17--  https://packages.couchbase.com/releases/5.0.1/couchbase-server-enterprise-5.0.1-centos7.x86_64.rpm
 Resolving packages.couchbase.com (packages.couchbase.com)... 54.192.145.11, 54.192.145.191, 54.192.145.180, ...
 Connecting to packages.couchbase.com (packages.couchbase.com)|54.192.145.11|:443... connected.
@@ -57,7 +82,7 @@ Saving to: ‘couchbase-server-enterprise-5.0.1-centos7.x86_64.rpm’
 100%[======================================>] 119,728,060 71.8MB/s   in 1.6s   
 
 2018-01-09 16:07:19 (71.8 MB/s) - ‘couchbase-server-enterprise-5.0.1-centos7.x86_64.rpm’ saved [119728060/119728060]
-```
+----
 
 [start=5]
 . Tune system parameters
@@ -65,23 +90,25 @@ Saving to: ‘couchbase-server-enterprise-5.0.1-centos7.x86_64.rpm’
 .. Tune swap behavior
 .. Increase open file limit
 
-```bash
+[source,bash,indent=0]
+----
 echo 'never' > /sys/kernel/mm/transparent_hugepage/enabled
 echo 'never' > /sys/kernel/mm/transparent_hugepage/defrag
 echo 0 > /proc/sys/vm/swappiness
 ulimit -n 70000
-```
+----
 
 [start=6]
 . Use `rpm` to install the downloaded package.
 
-```bash
+[source,bash,indent=0]
+----
 sudo rpm --install couchbase-server-enterprise-5.0.1-centos7.x86_64.rpm
-```
+----
 
 Expected output:
 
-```
+----
 Minimum RAM required  : 4 GB
 System RAM configured : 3.45 GB
 
@@ -100,7 +127,7 @@ allow connections to the following ports:
 
 By using this software you agree to the End User License Agreement.
 See /opt/couchbase/LICENSE.txt.
-```
+----
 
 [N.B. Note the list of ports above Couchbase Server needs to operate.
 Please be sure to check your firewall settings if you have any problems connecting.]
@@ -108,22 +135,24 @@ Please be sure to check your firewall settings if you have any problems connecti
 [start=7]
 . Reload `systemctl` configuration
 
-```bash
+[source,bash,indent=0]
+----
 systemctl daemon-reexec
-```
+----
 
 [start=8]
 . Start Couchbase Server
 
-```bash
+[source,bash,indent=0]
+----
 service couchbase-server start
-```
+----
 
 Expected output:
 
-```
+----
 Redirecting to /bin/systemctl start  couchbase-server.service
-```
+----
 
 At this point Couchbase Server should be running.  If this is a new
 installation, the next step will be to configure server parameters and
@@ -132,7 +161,7 @@ create a new bucket.  See Exercise 2 for these steps.
 If you have already configured one server and wish to add another to a cluster,
 skip to Exercise ...
 
-Lab Exercise 2 - Configure a Single Node
+=== Lab Exercise 1.2 - Configure a Single Node
 
 In this exercise, we will configure a newly-installed node of Couchbase Server.
 
@@ -171,7 +200,7 @@ The Couchbase Server Console will now show you the main dashboard screen, seen h
 
 image::NewDashboard.png[]
 
-Lab Exercise 3 - Create a New Bucket and Add a New documentation
+=== Lab Exercise 1.3 - Create a New Bucket and Add a New documentation
 
 In this exercise, we will create a new Couchbase Server Bucket, and
 add a new document using the Console.  Buckets are a high level organizational
@@ -184,7 +213,7 @@ structure in Couchbase.  You will always need at least one.
 . Click "Add Bucket" in the dialog
 
 The console will show you some information about the bucket, and mark it
-yellow while the bucket is brought on line.
+orange while the bucket is brought on line.
 
 image::NewBucket.gif[Creating a new bucket]
 
@@ -200,15 +229,88 @@ You can change the document by entering any valid JSON.
 
 [start=5]
 . After the first brace, add some new data in JSON format
-.. For example, you can type the following: "add": "new data",
+.. For example, you can type the following: "add": [ "valid", "json" ],
 .. Note the editor dynamically indicates whether the JSON is valid
 . Once you're satisfied, click "Save"
 .. Notice the generation number of the revision id increases (shown to the right).
 
 image::NewDocEditor.gif[Creating a new document manually]
 
-You now have a document you can retrieve using direct key/value lookup.
-This walk-through focuses on installation
->> Show query with primary index
->> Show index creation
->> Show query optimization analysis (time permitting)
+You now have a document you can retrieve using direct key/value lookup (a "get" with the client).
+
+=== Lab Exercise 1.4 - Create and Authorize a New User
+
+In this exercise, we will create a user account and give access to the bucket.  Client access now requires
+user authentication and authorization to function.  Use Roll-Based Access Control to tune access rights.
+
+. On the left side of your console, click on the "Security" link
+. Click on "Add User" in the upper right corner
+
+image::NewUser.gif[Creating a new bucket]
+
+This concludes the first series of exercises.  At this point, you have a fully deployed, single-node
+instance of Couchbase.  You can perform standard CRUD (create, read, update, and delete) operations using key/value
+lookup.
+
+== Section 2 - Creating a Multi-Node, Multi-Region Cluster
+
+In this series of exercises, you will create two multi-node clusters, and set up data
+replication between them.  The demonstrationsin this section use a total of six machines.
+To follow along, you will want to have at least two machines, either virtual or real.
+
+=== Lab Exercise 2.1 - Add a Second Node to Create a Multi-Node Cluster
+
+In this exercise, we will add a second node in combination with the first one created in Section 1.
+We will add the node through the administrative console on the first node.  You can also join
+nodes to a cluster from the setup interface presented after installation.
+
+Note the screen show adding a cluster to one with two existing nodes.  The procedure is identical,
+independent of the number of nodes already in the cluster.
+
+Fully adding a node is a two step process. First, add the node to the servers in the cluster.
+
+. Bring up the adminstration console for the first node you created.
+. On the left side of your console, click on the "Servers" link.
+. In the modal dialog, enter the IP address an isolated Couchbase node.
+. Click "Add Server".
+
+image::AddNode.gif[Adding a node to a cluster]
+
+After a few seconds, the new node will be configured and ready for step 2.  To activate
+the node, click "Rebalance" in the upper right corner of the console.
+
+image::ClusterRebalance.gif[Rebalance a cluster after adding a node]
+
+This cluster has documents in it already, so the rebalance takes a little time.
+
+=== Lab Exercise 2.2 - XDCR: Create a Remote Cluster Reference
+
+In this exercise, we will create a Remote Cluster Reference.  This is required to
+add a Cross-Data Center Replication (XDCR).
+
+First, create a second cluster with a different cluster name following the same steps used to
+create the first cluster.
+
+. Bring up the adminstration console for the first cluster.
+. On the left side of your console, click on the "XDCR" link.
+. Click on "Add Remote Cluster" on the right side of the console.
+. In the modal dialog, enter the cluster name of the second cluster.
+.. Enter the IP address of one of the nodes of the second cluster.
+.. Enter the adminstrative account details of the second cluster.
+. Click "Save".
+
+image::NewClusterReference.gif[Create a new cluster reference]
+
+
+=== Lab Exercise 2.3 - XDCR: Replicate a Bucket to a Remote Cluster
+
+In this exercise, we will set up replication between two clusters.  Replications are
+uni-directional, bucket-to-bucket, which allows you to create complex topologies.
+
+. Click on "Add Replication", on the right side of the console.
+. In the modal dialog, select the local bucket to replicate.
+.. Choose a remote cluster reference.
+.. Enter the name of the remote bucket.
+. Click "Save".
+
+image::AddReplication.gif[Replicate a bucket]
