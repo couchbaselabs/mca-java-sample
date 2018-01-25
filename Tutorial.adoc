@@ -1,16 +1,12 @@
-:meta-description: Enable and control improved logging with SLF4J and Logback.
-:title: Controlling Hierarchical Logging with SLF4J and Logback
-:slug: controlling-hierarchical-logging-slf4j-logback
-:focus-keyword: 
-:categories: Couchbase Server
-:tags: Couchbase Server, Logback, SLF4J
-:heroimage: 
+= Couchbase Server High Availability and Disaster Recovery Lab
+Hod Greeley <https://blog.couchbase.com>
+:keywords: couchbase, server, high, availability, disaster, recovery, java, nosql, node, multi-region
 :source-highlighter: pygments
+:sectanchors:
+:toc: left
 :imagesdir: images
 
-= Couchbase Server High Availability and Disaster Recovery Lab
-
-This document is intended to give a step-by-step series of exercises to get you
+This tutorial is intended to give a step-by-step series of exercises to get you
 up and running with Couchbase Server in a configuration that supports global 
 high availability and disaster recovery.  It includes supporting material in the
 form of an example application written in Java.
@@ -156,11 +152,12 @@ Redirecting to /bin/systemctl start  couchbase-server.service
 
 At this point Couchbase Server should be running.  If this is a new
 installation, the next step will be to configure server parameters and
-create a new bucket.  See Exercise 2 for these steps.
+create a new bucket.  See <<exercise-1.2,Lab Exercise 1.2>> for these steps.
 
 If you have already configured one server and wish to add another to a cluster,
-skip to Exercise ...
+skip to <<section-2,Section 2>>.
 
+[#exercise-1.2]
 === Lab Exercise 1.2 - Configure a Single Node
 
 In this exercise, we will configure a newly-installed node of Couchbase Server.
@@ -252,6 +249,7 @@ This concludes the first series of exercises.  At this point, you have a fully d
 instance of Couchbase.  You can perform standard CRUD (create, read, update, and delete) operations using key/value
 lookup.
 
+[#section-2]
 == Section 2 - Creating a Multi-Node, Multi-Region Cluster
 
 In this series of exercises, you will create two multi-node clusters, and set up data
@@ -314,3 +312,17 @@ uni-directional, bucket-to-bucket, which allows you to create complex topologies
 . Click "Save".
 
 image::AddReplication.gif[Replicate a bucket]
+
+For bi-directional replication between two clusters, follow the setps above on the
+second cluster, referring back to the first cluster.
+
+=== Summary
+
+This concludes the exercises for installing and configuring a pair of clusters with
+redundancy between them.
+
+In this same repository, you will find the source code for a simple Java application
+that uses the Couchbase Multi-Cluster Aware Java client.  This client is currently under
+development, and is available as an Enterprise feature.  Since the code for the client is
+not publically available, you will need to obtain a copy separately in order to build
+the project.  Please contact a Couchbase Sales Representative for more information.

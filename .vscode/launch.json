@@ -1,0 +1,48 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Debug - single node update",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "console": "internalConsole",
+      "stopOnEntry": false,
+      "mainClass": "com.couchbase.server.xdcr.ClusterBasics",
+      "projectName": "xdcr",
+      "args": "-c 172.23.123.4 -b my_bucket -i user -p password -u 1 -l statistics,update"
+    },
+    {
+      "type": "java",
+      "name": "Debug - mixed load",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "console": "internalConsole",
+      "stopOnEntry": false,
+      "mainClass": "com.couchbase.server.xdcr.ClusterBasics",
+      "projectName": "xdcr",
+      "args": "-c 172.23.122.55,172.23.122.56,172.23.122.57:172.23.123.4,172.23.123.5,172.23.123.6 -b my_bucket -i user -p password -r 2 -u 2 -q 2"
+    },
+    {
+      "type": "java",
+      "name": "Debug - read only",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "console": "internalConsole",
+      "stopOnEntry": false,
+      "mainClass": "com.couchbase.server.xdcr.ClusterBasics",
+      "projectName": "xdcr",
+      "args": "-c 172.23.122.55,172.23.122.56,172.23.122.57:172.23.123.4,172.23.123.5,172.23.123.6 -b my_bucket -i user -p password -r 1"
+    },
+    {
+      "type": "java",
+      "name": "Debug (Attach)",
+      "request": "attach",
+      "hostName": "localhost",
+      "port": 0
+    }
+  ]
+}

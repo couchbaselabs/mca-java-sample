@@ -1,6 +1,13 @@
-# Couchbase xDCR Sample Project
+# Couchbase XDCR Sample Project
 
-This project makes use of the 
+This project makes use of the Couchbase Multi-Cluster Aware Java client.  Using this client,
+database loads will automatically transfer to alternative clusters if nodes become unavailable.  See
+the Tutorial document in this repo for a walk through of setting up a multi-master, multi-region
+cluster.
+
+This client is currently in development, and available only as an Enterprise Edition feature
+(as of 1/24/2018).  You will not be able to build this sample without the client.  For more
+information, please contact a Couchbase sales representative.
 
 Installation
 * Java 8 or higher
