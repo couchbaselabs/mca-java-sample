@@ -5,18 +5,17 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.couchbase.server</groupId>
-    <artifactId>xdcr</artifactId>
+    <artifactId>mca</artifactId>
     <version>1.0</version>
-    <name>xDCR Java Sample</name>
+    <name>MCA Java Sample</name>
     <description>
-        This shows an example of using the Java SDK with Couchbase Server, including the cross-data center (xDCR)
-        automated failover support.
+        This shows an example of using the Java Multi-Cluster Aware SDK with Couchbase Server.
     </description>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<jdk.version>1.8</jdk.version>
-        <main.class>com.couchbase.server.xdcr.ClusterBasics</main.class>
+        <main.class>com.couchbase.server.mca.ClusterBasics</main.class>
     </properties>
     <licenses>
         <license>
@@ -69,7 +68,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.6.0</version>
                 <configuration>
-                    <mainClass>com.couchbase.server.xdcr.ClusterBasics</mainClass>
+                    <mainClass>com.couchbase.server.mca.ClusterBasics</mainClass>
                 </configuration>
                 <executions>
                     <execution>
@@ -82,7 +81,7 @@
                             <arguments>
                                 <argument>-classpath</argument>
                                 <classpath/>
-                                <argument>com.couchbase.server.xdcr.ClusterBasics</argument>
+                                <argument>com.couchbase.server.mca.ClusterBasics</argument>
                             </arguments>
                         </configuration>
                     </execution>

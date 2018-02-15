@@ -1,4 +1,4 @@
-package com.couchbase.server.xdcr;
+package com.couchbase.server.mca;
 
 import com.couchbase.utils.Options;
 import com.couchbase.utils.Logger;
@@ -44,8 +44,9 @@ import com.github.javafaker.Faker;
 import com.github.javafaker.Name;
 
 /**
- * Multi-threaded read/write and dynamic query load generator for Couchbase, supporting multiple data centers.  The data
- * centers will typically be set to replicate using Couchbase's Cross-Data Center Replication (xDCR) feature.
+ * Multi-threaded read/write and dynamic query load generator for Couchbase, supporting multiple data centers.  Uses the
+ * Multi-Cluster Aware Java client.  The data centers will typically be set to replicate using Couchbase's Cross-Data Center
+ * Replication (XDCR) feature.
  */
 
 public class ClusterBasics {

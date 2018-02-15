@@ -1,4 +1,4 @@
-# Couchbase XDCR Sample Project
+# Couchbase MCA Sample Project
 
 This project makes use of the Couchbase Multi-Cluster Aware Java client.  Using this client,
 database loads will automatically transfer to alternative clusters if nodes become unavailable.  See
