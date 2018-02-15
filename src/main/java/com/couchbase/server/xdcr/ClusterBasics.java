@@ -74,6 +74,7 @@ public class ClusterBasics {
     
     bucketName = options.stringValueOf("bucket");
 
+    // tag::cluster-spec[]
     String[] clusters = options.stringValueOf("clusters").split(":");
 
     List<ClusterSpec> specs = new ArrayList<>(clusters.length);
@@ -82,40 +83,44 @@ public class ClusterBasics {
       Set<String> nodes = Arrays.stream(cluster.split(",")).collect(Collectors.toSet());
       specs.add(ClusterSpec.create(nodes));
     }
+    // end::cluster-spec[]
 
-    //specs = Arrays.stream(clusters)
-    //  .map(cluster -> Arrays.stream(cluster.split(",")).collect(Collectors.toSet()))
-    //  .map(ClusterSpec::create)
-    //  .collect(Collectors.toList());
-
-    serviceTypes.add(ServiceType.QUERY);
+    // tag::services[]
     serviceTypes.add(ServiceType.BINARY);
+    serviceTypes.add(ServiceType.QUERY);
+    // end::services[]
 
-    Coordinator coordinator = Coordinators.isolated(new IsolatedCoordinator.Options()
-      .clusterSpecs(specs)
-      .activeEntries(specs.size())
-      .failoverNumNodes(2)
-      .gracePeriod(TIMEOUT)
-      .topologyBehavior(TopologyBehavior.WRAP_AT_END)
-      .serviceTypes(serviceTypes)
+    // tag::coordinator[]
+    Coordinator coordinator = Coordinators.isolated(new IsolatedCoordinator.Options() // <1>
+      .clusterSpecs(specs) // <2>
+      .activeEntries(specs.size()) // <3>
+      .failoverNumNodes(2) // <4>
+      .gracePeriod(TIMEOUT) // <5>
+      .topologyBehavior(TopologyBehavior.WRAP_AT_END) // <6>
+      .serviceTypes(serviceTypes) // <7>
     );
-  
-    TrafficMonitoringFailureDetector.Options trafficOptions = TrafficMonitoringFailureDetector.options()
-      .maxFailedOperations(5)
-      .failureInterval(60);
+    // end::coordinator[]
 
-    FailureDetectorFactory<TrafficMonitoringFailureDetector> traffic = FailureDetectorFactories.trafficMonitoring(coordinator, trafficOptions);
+    // tag::failure-detector[]
+    TrafficMonitoringFailureDetector.Options trafficOptions = TrafficMonitoringFailureDetector.options() // <1>
+      .maxFailedOperations(5) // <2>
+      .failureInterval(60); // <3>
+
+    FailureDetectorFactory<TrafficMonitoringFailureDetector> traffic = FailureDetectorFactories.trafficMonitoring(coordinator, trafficOptions); // <4>
 
     NodeHealthFailureDetector.Options healthOptions = NodeHealthFailureDetector.options();
     
-    FailureDetectorFactory<NodeHealthFailureDetector> health = FailureDetectorFactories.nodeHealth(coordinator, healthOptions);
+    FailureDetectorFactory<NodeHealthFailureDetector> health = FailureDetectorFactories.nodeHealth(coordinator, healthOptions); // <5>
 
-    DisjunctionFailureDetectorFactory detector = FailureDetectorFactories.disjunction(traffic, health);
+    DisjunctionFailureDetectorFactory detector = FailureDetectorFactories.disjunction(traffic, health); // <6>
+    // end::failure-detector[]
 
+    // tag::client[]
     MultiClusterClient client = new MultiClusterClient(coordinator, detector);
   
     client.authenticate(options.stringValueOf("id"), options.stringValueOf("password"));
     bucket = new BucketFacade(client.openBucket(bucketName, null), TIMEOUT, TimeUnit.MILLISECONDS);
+    // end::client[]
 
     startThreads(options);
 
