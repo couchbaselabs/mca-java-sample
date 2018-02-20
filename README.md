@@ -7,7 +7,7 @@ cluster.
 
 This client is currently available only as an Enterprise Edition feature (as of 2/6/2018).  You
 will not be able to build this sample without the client.  For more information, please contact
-a Couchbase sales representative.
+a Couchbase sales representative (<sales@couchbase.com>).
 
 Installation
 * Java 8 or higher
